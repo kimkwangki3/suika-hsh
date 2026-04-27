@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: suika-hsh
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
+    headers:
+      - path: /sw.js
+        name: Service-Worker-Allowed
+        value: /
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache
+    pullRequestPreviewsEnabled: false

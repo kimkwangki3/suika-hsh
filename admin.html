@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#152484">
+<title>관리자 · 수박게임 · 홍성훈</title>
+<link rel="stylesheet" href="ui-overlay.css?v=3">
+<style>
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', sans-serif;
+    color: #1A1A1A; min-height: 100vh;
+    background:
+      linear-gradient(180deg, rgba(244,246,251,0.92) 0%, rgba(244,246,251,0.96) 100%),
+      url('rpdla.png?v=3') center top / cover no-repeat fixed !important;
+  }
+  body::before { display: none !important; }
+  .admin-top, .page-head, .tabs, .toolbar, .stat, .grid, .toast { position: relative; z-index: 1; }
+
+  .admin-top {
+    position: sticky; top: 0; z-index: 100;
+    background: linear-gradient(135deg, #152484, #2a3aa8);
+    color: #fff; padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    border-bottom: 2px solid #00A0E9;
+  }
+  .admin-top .left { display: flex; flex-direction: column; line-height: 1.2; }
+  .admin-top .name { font-weight: 900; font-size: 16px; }
+  .admin-top .sub { font-size: 10px; color: #00A0E9; letter-spacing: 0.15em; }
+  .admin-top .actions { display: flex; gap: 6px; }
+  .admin-top .btn {
+    background: rgba(255,255,255,0.15); color: #fff;
+    border: 1px solid rgba(255,255,255,0.3); border-radius: 999px;
+    padding: 6px 12px; font-size: 12px; font-weight: 700;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .admin-top .btn:active { background: rgba(255,255,255,0.3); }
+
+  .page-head { padding: 18px 16px 6px; }
+  .page-head h1 { margin: 0 0 4px; font-size: 18px; font-weight: 800; color: #152484; }
+  .page-head p { margin: 0; font-size: 12px; color: #4A4A4A; line-height: 1.55; }
+
+  .tabs {
+    display: flex; gap: 6px; padding: 12px 16px 0;
+    border-bottom: 1.5px solid #DDE2EE;
+  }
+  .tab {
+    padding: 10px 14px; font-size: 13px; font-weight: 700;
+    background: none; border: none; cursor: pointer;
+    color: #8A8A8A; border-bottom: 2.5px solid transparent;
+    margin-bottom: -1.5px; -webkit-tap-highlight-color: transparent;
+  }
+  .tab.active { color: #152484; border-bottom-color: #00A0E9; }
+  .tab .count {
+    display: inline-block; margin-left: 4px;
+    padding: 1px 6px; border-radius: 999px;
+    background: #EAEEF7; color: #4A4A4A; font-size: 10px; font-weight: 800;
+  }
+  .tab.active .count { background: #00A0E9; color: #fff; }
+
+  .toolbar {
+    display: flex; gap: 8px; padding: 10px 16px;
+  }
+  .toolbar input[type=search] {
+    flex: 1; min-width: 0;
+    padding: 10px 12px; border: 1.5px solid #DDE2EE;
+    border-radius: 12px; font-size: 14px; background: #fff;
+    -webkit-appearance: none; outline: none;
+  }
+  .toolbar input[type=search]:focus { border-color: #00A0E9; }
+  .toolbar button {
+    padding: 10px 14px; border: none; border-radius: 12px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    background: #fff; color: #152484; border: 1.5px solid #DDE2EE;
+    white-space: nowrap;
+  }
+  .toolbar button.danger { color: #E54848; border-color: #f5c8c8; }
+
+  .stat {
+    margin: 0 16px 8px; font-size: 12px; color: #4A4A4A;
+    background: #fff; border-radius: 10px; padding: 8px 12px;
+    border: 1px solid #EAEEF7;
+  }
+  .stat b { color: #00A0E9; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px; padding: 0 16px 100px;
+  }
+  .card {
+    background: #fff; border: 1.5px solid #EAEEF7;
+    border-radius: 14px; padding: 8px;
+    text-align: center;
+    transition: transform .12s, box-shadow .12s, border-color .12s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+  .card.changed { border-color: #00A0E9; background: linear-gradient(180deg, #fff, #f0f9ff); }
+  .card.changed::after {
+    content: '교체됨'; position: absolute; top: 6px; right: 6px;
+    font-size: 9px; font-weight: 800; color: #fff;
+    background: #00A0E9; padding: 2px 6px; border-radius: 999px;
+  }
+  .card .imgwrap {
+    width: 100%; aspect-ratio: 1; background: #F4F6FB;
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; margin-bottom: 6px;
+  }
+  .card .imgwrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .card .name { font-size: 10px; color: #8A8A8A; word-break: break-all; line-height: 1.3; margin-bottom: 4px; height: 26px; overflow: hidden; }
+  .card .size { font-size: 10px; color: #00A0E9; font-weight: 800; margin-bottom: 6px; }
+  .card label.upload {
+    display: block; padding: 6px 8px;
+    background: #152484; color: #fff;
+    border-radius: 8px; font-size: 11px; font-weight: 800;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .card label.upload:active { background: #0e1a5e; }
+  .card .reset {
+    display: none; margin-top: 4px;
+    font-size: 10px; color: #E54848;
+    background: transparent; border: none; cursor: pointer;
+    text-decoration: underline;
+  }
+  .card.changed .reset { display: inline-block; }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #152484; color: #fff; padding: 10px 18px;
+    border-radius: 999px; font-size: 13px; font-weight: 700;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    opacity: 0; transition: opacity .2s, transform .2s;
+    pointer-events: none; z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+  @media (max-width: 480px) {
+    .grid { grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 12px 100px; }
+    .card { padding: 6px; }
+    .card .name { font-size: 9px; height: 22px; }
+    .tabs { padding: 12px 12px 0; }
+    .tab { padding: 9px 10px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="admin-top">
+  <div class="left">
+    <span class="name">홍성훈 · 관리자</span>
+    <span class="sub">조 국 혁 신 당</span>
+  </div>
+  <div class="actions">
+    <a href="index.html" class="btn">게임</a>
+    <button id="btnLogout" class="btn">로그아웃</button>
+  </div>
+</header>
+
+<div class="page-head">
+  <h1>이미지 교체 관리</h1>
+  <p>변경 가능한 자산만 표시됩니다. <b>과일</b> · <b>바탕화면</b> · <b>UI 앞 이미지</b>만 교체 가능.<br>
+  교체 후 게임 페이지에서 <b>Ctrl+Shift+R</b>(강력 새로고침)으로 적용하세요.</p>
+  <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+    <a href="originals.zip" download class="dl-btn">⬇ 원본 ZIP 다운로드 (40개)</a>
+    <a href="originals/" target="_blank" class="dl-btn ghost">📁 원본 폴더 열기</a>
+  </div>
+</div>
+<style>
+  .dl-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 8px 14px; border-radius: 999px;
+    background: #00A0E9; color: #fff;
+    font-size: 12px; font-weight: 800;
+    text-decoration: none; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,160,233,0.3);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .dl-btn.ghost { background: #fff; color: #152484; border: 1.5px solid #DDE2EE; box-shadow: none; }
+  .dl-btn:active { transform: translateY(1px); }
+</style>
+
+<div class="tabs">
+  <button class="tab active" data-cat="fruits">🍉 과일 <span class="count" id="cnt-fruits">0</span></button>
+  <button class="tab" data-cat="background">🌅 바탕화면 <span class="count" id="cnt-background">0</span></button>
+  <button class="tab" data-cat="ui">🖼 UI 앞 이미지 <span class="count" id="cnt-ui">0</span></button>
+</div>
+
+<div class="toolbar">
+  <input type="search" id="search" placeholder="사이즈/파일명 검색 (예: 319)">
+  <button id="btnReset" class="danger">전체 초기화</button>
+</div>
+
+<div class="stat">
+  현재 탭 <b id="curCnt">0</b>개 · 전체 교체됨 <b id="changed">0</b>개
+</div>
+
+<div id="grid" class="grid"></div>
+
+<div id="toast" class="toast"></div>
+
+<script src="js/swg-app.js?v=3"></script>
+<script>
+(async () => {
+  await SWGApp.init();
+  const sess = SWGApp.requireAdmin();
+  if (!sess) return;
+
+  document.getElementById('btnLogout').addEventListener('click', () => {
+    SWGApp.logout(); location.href = 'login.html';
+  });
+
+  if (!window.caches) {
+    alert('Cache API를 사용할 수 없습니다.\nlocalhost(서버시작.bat) 환경에서만 작동합니다.');
+    return;
+  }
+  SWGApp.registerSW();
+
+  const data = await fetch('assets-list.json?v=' + Date.now()).then(r => r.json());
+  const cats = {
+    fruits: data.fruits || [],
+    background: data.background || [],
+    ui: data.ui || []
+  };
+  document.getElementById('cnt-fruits').textContent = cats.fruits.length;
+  document.getElementById('cnt-background').textContent = cats.background.length;
+  document.getElementById('cnt-ui').textContent = cats.ui.length;
+
+  let overrides = new Set(await SWGAssets.listPaths());
+  let currentCat = 'fruits';
+  const grid = document.getElementById('grid');
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  function render(filter = '') {
+    const all = cats[currentCat];
+    const list = filter
+      ? all.filter(x => (x.path + ' ' + x.w + 'x' + x.h).toLowerCase().includes(filter.toLowerCase()))
+      : all;
+    document.getElementById('curCnt').textContent = list.length;
+    grid.innerHTML = '';
+    for (const item of list) {
+      const path = item.path;
+      const webPath = '/' + path;
+      const isChanged = overrides.has(webPath);
+      const card = document.createElement('div');
+      card.className = 'card' + (isChanged ? ' changed' : '');
+
+      const fname = path.split('/').pop();
+      const shortName = fname.length > 20 ? fname.slice(0, 8) + '…' + fname.slice(-8) : fname;
+
+      card.innerHTML = `
+        <div class="imgwrap"><img src="${webPath}?t=${Date.now()}" alt="${fname}" loading="lazy"></div>
+        <div class="name" title="${fname}">${shortName}</div>
+        <div class="size">${item.w}×${item.h}</div>
+        <label class="upload">교체<input type="file" accept="image/*" hidden></label>
+        <button class="reset" type="button">원본 복원</button>
+      `;
+      const fileInput = card.querySelector('input[type=file]');
+      const img = card.querySelector('img');
+      const resetBtn = card.querySelector('.reset');
+
+      fileInput.addEventListener('change', async (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        if (f.size > 2 * 1024 * 1024) { toast('2MB 이하 이미지만 가능'); fileInput.value=''; return; }
+        try {
+          await SWGAssets.set(webPath, f);
+          overrides.add(webPath);
+          card.classList.add('changed');
+          img.src = URL.createObjectURL(f);
+          updateStat();
+          toast('교체 완료 — 게임에서 Ctrl+Shift+R 새로고침');
+        } catch (err) {
+          toast('저장 실패: ' + err.message);
+        }
+        fileInput.value = '';
+      });
+
+      resetBtn.addEventListener('click', async () => {
+        await SWGAssets.del(webPath);
+        overrides.delete(webPath);
+        card.classList.remove('changed');
+        img.src = webPath + '?t=' + Date.now();
+        updateStat();
+        toast('원본 복원');
+      });
+
+      grid.appendChild(card);
+    }
+  }
+
+  function updateStat() {
+    document.getElementById('changed').textContent = overrides.size;
+  }
+
+  // 탭 전환
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      currentCat = t.dataset.cat;
+      document.getElementById('search').value = '';
+      render();
+    });
+  });
+
+  document.getElementById('search').addEventListener('input', e => render(e.target.value));
+  document.getElementById('btnReset').addEventListener('click', async () => {
+    if (!confirm('모든 교체 이미지를 초기화하시겠습니까?')) return;
+    await SWGAssets.clear();
+    overrides.clear();
+    render(document.getElementById('search').value);
+    updateStat();
+    toast('전체 초기화 완료');
+  });
+
+  render();
+  updateStat();
+})();
+</script>
+</body>
+</html>

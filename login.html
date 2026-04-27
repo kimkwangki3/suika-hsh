@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#152484">
+<title>로그인 · 홍성훈 · 조국혁신당</title>
+<link rel="stylesheet" href="ui-overlay.css?v=4">
+<style>
+  body {
+    margin: 0; padding: 0;
+    min-height: 100vh; min-height: 100dvh;
+    background:
+      linear-gradient(160deg, rgba(21,36,132,0.78) 0%, rgba(42,58,168,0.65) 50%, rgba(0,160,233,0.55) 100%),
+      url('rpdla.png?v=4') center center / cover no-repeat fixed;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+  }
+  .login-wrap {
+    position: relative; z-index: 2;
+    width: 100%; max-width: 360px; padding: 28px 24px;
+    margin: 16px;
+    background: rgba(255,255,255,0.97);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center;
+  }
+  .brand-circle {
+    width: 76px; height: 76px;
+    margin: 0 auto 14px;
+    background: linear-gradient(135deg, #152484, #00A0E9);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 28px; font-weight: 900;
+    box-shadow: 0 8px 20px rgba(21,36,132,0.3);
+  }
+  .brand-name { font-size: 22px; font-weight: 900; color: #152484; letter-spacing: -0.02em; }
+  .brand-party { font-size: 11px; font-weight: 700; color: #00A0E9; letter-spacing: 0.2em; margin-top: 2px; margin-bottom: 8px; }
+  .game-title {
+    font-size: 16px; font-weight: 700; color: #1A1A1A;
+    margin: 6px 0 22px; padding: 6px 14px;
+    background: #F4F6FB; border-radius: 999px; display: inline-block;
+  }
+  .field { margin-bottom: 12px; text-align: left; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: #4A4A4A; margin-bottom: 4px; }
+  .field input {
+    width: 100%; padding: 14px;
+    border: 1.5px solid #DDE2EE; border-radius: 12px;
+    font-size: 16px; box-sizing: border-box;
+    background: #F8F9FC;
+    -webkit-appearance: none; outline: none;
+    transition: border-color .15s, background .15s;
+  }
+  .field input:focus { border-color: #00A0E9; background: #fff; }
+  .err {
+    min-height: 18px; font-size: 13px; color: #E54848; font-weight: 600;
+    margin: 4px 0 8px; text-align: left;
+  }
+  .btn {
+    display: block; width: 100%; padding: 13px;
+    margin-top: 8px;
+    border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .1s, box-shadow .15s;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #152484, #2a3aa8);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(21,36,132,0.25);
+  }
+  .btn-secondary {
+    background: #fff; color: #152484;
+    border: 1.5px solid #DDE2EE;
+  }
+  .btn-test {
+    background: linear-gradient(135deg, #00A0E9, #4ec3ef);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(0,160,233,0.3);
+    margin-top: 14px;
+  }
+  .divider {
+    margin: 16px 0 8px; font-size: 11px; color: #B0B5C0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: #EAEEF7;
+  }
+</style>
+</head>
+<body>
+  <main class="login-wrap">
+    <div class="brand-circle">홍</div>
+    <div class="brand-name">홍성훈</div>
+    <div class="brand-party">조 국 혁 신 당</div>
+    <div class="game-title">🍉 수박게임</div>
+
+    <form id="authForm" autocomplete="off">
+      <div class="field">
+        <label for="u">아이디</label>
+        <input id="u" name="u" type="text" inputmode="text" autocapitalize="off" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="p">비밀번호</label>
+        <input id="p" name="p" type="password" autocomplete="current-password">
+      </div>
+      <div id="err" class="err"></div>
+
+      <button type="button" id="btnLogin" class="btn btn-primary">로그인</button>
+      <button type="button" id="btnSignup" class="btn btn-secondary">회원가입</button>
+
+      <div class="divider">또는</div>
+      <button type="button" id="btnTest" class="btn btn-test">🚀 테스트로 시작 (회원가입 없이)</button>
+    </form>
+  </main>
+
+<script src="js/swg-app.js?v=4"></script>
+<script>
+(async () => {
+  await SWGApp.init();
+  if (SWGApp.session()) { location.href = 'index.html'; return; }
+
+  const err = document.getElementById('err');
+  const showErr = (m) => { err.textContent = m || ''; };
+  const lock = (on) => {
+    ['btnLogin','btnSignup','btnTest'].forEach(id => document.getElementById(id).disabled = on);
+  };
+
+  document.getElementById('btnLogin').addEventListener('click', async () => {
+    showErr('');
+    const u = document.getElementById('u').value.trim();
+    const p = document.getElementById('p').value;
+    lock(true);
+    try {
+      await SWGApp.login(u, p);
+      location.href = 'index.html';
+    } catch (ex) {
+      showErr(ex.message);
+      lock(false);
+    }
+  });
+
+  document.getElementById('btnSignup').addEventListener('click', async () => {
+    showErr('');
+    const u = document.getElementById('u').value.trim();
+    const p = document.getElementById('p').value;
+    lock(true);
+    try {
+      await SWGApp.signup(u, p);
+      location.href = 'index.html';
+    } catch (ex) {
+      showErr(ex.message);
+      lock(false);
+    }
+  });
+
+  document.getElementById('btnTest').addEventListener('click', async () => {
+    showErr('');
+    lock(true);
+    try {
+      await SWGApp.guest();
+      location.href = 'index.html';
+    } catch (ex) {
+      showErr(ex.message);
+      lock(false);
+    }
+  });
+
+  // Enter 키 = 로그인
+  document.getElementById('authForm').addEventListener('submit', e => e.preventDefault());
+  ['u','p'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnLogin').click(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

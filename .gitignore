@@ -1,0 +1,16 @@
+.idea
+.vercel
+.vscode/
+_backup_korean_ui/
+*.bat
+서버.ps1
+server.ps1
+.DS_Store
+Thumbs.db
+desktop.ini
+originals.zip
+originals/
+ziic6cBZ
+nul
+*.log
+node_modules/

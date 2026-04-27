@@ -1,0 +1,251 @@
+/* 조국혁신당 / 홍성훈 모바일 UI 오버레이 */
+
+:root {
+    --hsh-primary: #152484;
+    --hsh-primary-dark: #0e1a5e;
+    --hsh-accent: #00A0E9;
+    --hsh-white: #ffffff;
+    --hsh-soft: #F4F6FB;
+    --hsh-text: #1A1A1A;
+    --topbar-h: 52px;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: var(--hsh-primary) url('rpdla.png?v=3') center center / cover no-repeat fixed !important;
+}
+body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: linear-gradient(180deg, rgba(21,36,132,0.55) 0%, rgba(21,36,132,0.35) 50%, rgba(0,160,233,0.40) 100%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ================ 상단 헤더 (모바일) ================ */
+#suikaTopbar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: var(--topbar-h);
+    background: linear-gradient(135deg, var(--hsh-primary) 0%, #2a3aa8 100%);
+    color: var(--hsh-white);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    box-sizing: border-box;
+    z-index: 10000;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    border-bottom: 2px solid var(--hsh-accent);
+    -webkit-tap-highlight-color: transparent;
+}
+
+#suikaTopbar .hb-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+#suikaTopbar .hb-btn:active { background: rgba(255,255,255,0.25); }
+
+#suikaTopbar .brand {
+    flex: 1;
+    text-align: center;
+    line-height: 1.15;
+    overflow: hidden;
+}
+#suikaTopbar .brand-name {
+    display: block;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #fff;
+}
+#suikaTopbar .brand-sub {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--hsh-accent);
+    margin-top: 1px;
+}
+
+#suikaTopbar .user-pill {
+    background: rgba(0,160,233,0.2);
+    border: 1px solid rgba(0,160,233,0.4);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ================ 사이드 메뉴 ================ */
+.menu-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 10001;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+}
+.menu-backdrop.show { opacity: 1; pointer-events: auto; }
+
+.side-menu {
+    position: fixed;
+    top: 0; left: 0;
+    width: 280px; max-width: 80vw;
+    height: 100%;
+    background: #fff;
+    z-index: 10002;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    display: flex; flex-direction: column;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+}
+.side-menu.open { transform: translateX(0); }
+
+.side-menu .sm-head {
+    background: linear-gradient(135deg, var(--hsh-primary), var(--hsh-accent));
+    color: #fff;
+    padding: 22px 20px;
+    border-bottom: 3px solid var(--hsh-accent);
+}
+.side-menu .sm-name { font-size: 20px; font-weight: 900; letter-spacing: -0.02em; }
+.side-menu .sm-sub { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; opacity: 0.9; margin-top: 4px; }
+
+.side-menu .sm-user {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--hsh-soft);
+    background: #FAFBFE;
+    display: flex; align-items: center; gap: 8px;
+}
+.side-menu .sm-user .sm-label { font-size: 11px; color: #8A8A8A; font-weight: 700; }
+.side-menu .sm-user strong { font-size: 14px; color: var(--hsh-primary); flex: 1; }
+.side-menu .sm-user .sm-role {
+    font-size: 10px; padding: 2px 8px; border-radius: 999px;
+    background: var(--hsh-accent); color: #fff; font-weight: 800;
+}
+
+.side-menu .sm-item {
+    display: block;
+    padding: 14px 20px;
+    color: var(--hsh-text);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid #F4F6FB;
+    background: #fff;
+    border-left: 3px solid transparent;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+    border-top: none; border-right: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.side-menu .sm-item:active { background: #F4F6FB; }
+.side-menu .sm-item.active { border-left-color: var(--hsh-accent); color: var(--hsh-primary); font-weight: 800; background: #F4F6FB; }
+.side-menu .sm-item.logout { color: #E54848; margin-top: auto; border-top: 1px solid #F4F6FB; }
+
+.side-menu .sm-foot {
+    margin-top: auto;
+    padding: 14px 20px;
+    font-size: 10px;
+    color: #8A8A8A;
+    text-align: center;
+    background: #FAFBFE;
+}
+
+/* ================ 게임 캔버스 영역 ================ */
+#canvasDiv {
+    position: absolute !important;
+    top: var(--topbar-h) !important;
+    left: 0;
+    width: 100%;
+    background:
+      linear-gradient(180deg, rgba(255,248,231,0.78) 0%, rgba(255,224,178,0.78) 100%),
+      url('rpdla.png?v=3') center center / cover no-repeat;
+    z-index: 1;
+}
+#GameCanvas { background-color: transparent; position: relative; z-index: 2; }
+
+#splash {
+    position: absolute !important;
+    top: var(--topbar-h) !important;
+    left: 0;
+    width: 100%;
+    height: calc(100% - var(--topbar-h));
+    background:
+      linear-gradient(180deg, rgba(21,36,132,0.45) 0%, rgba(0,160,233,0.30) 100%),
+      url('rpdla.png?v=3') center center / cover no-repeat !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 5;
+}
+#splash::after {
+    content: "수박게임 · 홍성훈";
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    background: rgba(21,36,132,0.8);
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: 1.5px solid var(--hsh-accent);
+}
+
+#loadingText {
+    position: absolute !important;
+    top: auto !important;
+    bottom: 22% !important;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    z-index: 11;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff !important;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    font-family: 'Pretendard', sans-serif;
+}
+
+#loadingImg { top: 45% !important; z-index: 11; }
+
+/* ================ 작은 폰 대응 ================ */
+@media (max-width: 360px) {
+    #suikaTopbar { padding: 0 8px; }
+    #suikaTopbar .brand-name { font-size: 14px; }
+    #suikaTopbar .brand-sub { font-size: 9px; }
+    #suikaTopbar .user-pill { font-size: 10px; padding: 5px 8px; max-width: 70px; }
+    #suikaTopbar .hb-btn { width: 32px; height: 32px; font-size: 16px; }
+}
+
+/* iOS 노치 safe-area */
+@supports (padding: max(0px)) {
+    #suikaTopbar {
+        padding-top: env(safe-area-inset-top);
+        height: calc(var(--topbar-h) + env(safe-area-inset-top));
+    }
+    #canvasDiv {
+        top: calc(var(--topbar-h) + env(safe-area-inset-top)) !important;
+    }
+    #splash {
+        top: calc(var(--topbar-h) + env(safe-area-inset-top)) !important;
+        height: calc(100% - var(--topbar-h) - env(safe-area-inset-top));
+    }
+}
