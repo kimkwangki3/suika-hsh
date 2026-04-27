@@ -109,12 +109,19 @@ body::before {
     height: 100%;
     background: #fff;
     z-index: 10002;
-    transform: translateX(-100%);
-    transition: transform .25s ease;
+    transform: translateX(-110%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform .25s ease, visibility 0s linear .25s;
     display: flex; flex-direction: column;
     box-shadow: 4px 0 20px rgba(0,0,0,0.2);
 }
-.side-menu.open { transform: translateX(0); }
+.side-menu.open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    transition: transform .25s ease, visibility 0s linear 0s;
+}
 
 .side-menu .sm-head {
     background: linear-gradient(135deg, var(--hsh-primary), var(--hsh-accent));
