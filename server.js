@@ -23,7 +23,15 @@ async function initDB() {
 }
 
 app.use(express.json({ limit: '32kb' }));
-app.use(express.static(__dirname, { index: 'login.html' }));
+app.use(express.static(__dirname, {
+  index: 'login.html',
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('sw.js')) {
+      res.setHeader('Service-Worker-Allowed', '/');
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  }
+}));
 
 app.get('/api/top3', async (req, res) => {
   try {

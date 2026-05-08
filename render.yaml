@@ -16,11 +16,4 @@ services:
         fromDatabase:
           name: suika-hsh-db
           property: connectionString
-    headers:
-      - path: /sw.js
-        name: Service-Worker-Allowed
-        value: /
-      - path: /sw.js
-        name: Cache-Control
-        value: no-cache
     pullRequestPreviewsEnabled: false
