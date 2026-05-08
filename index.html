@@ -226,25 +226,46 @@
                 return 0;
             }
 
-            // 1) localStorage.setItem 후킹 — 게임이 점수를 저장하는 순간을 정확히 잡음
-            //    ⚠️ 우리 콜백은 setTimeout으로 비동기 처리하여 cocos2d 호출 스택과 완전 분리
-            try {
-                const origSetItem = localStorage.setItem.bind(localStorage);
-                localStorage.setItem = function (key, value) {
-                    const result = origSetItem(key, value);
-                    if (typeof key === 'string' && key.endsWith('playerData11')) {
-                        const v = value;
-                        setTimeout(() => {
-                            try {
-                                const data = JSON.parse(v);
-                                const s = pickScoreFromPlayerData(data);
-                                if (s > 0) showRegBtn(s);
-                            } catch (e) { /* swallow */ }
-                        }, 0);
+            // 공통: storage setItem 후킹 함수 (window/cocos2d 양쪽 적용)
+            function hookSetItem(target) {
+                if (!target || target.__suikaHooked || typeof target.setItem !== 'function') return;
+                try {
+                    const orig = target.setItem.bind(target);
+                    target.setItem = function (key, value) {
+                        const result = orig(key, value);
+                        if (typeof key === 'string') {
+                            const v = value;
+                            setTimeout(() => {
+                                try {
+                                    if (/playerData/i.test(key)) {
+                                        const data = JSON.parse(v);
+                                        const s = pickScoreFromPlayerData(data);
+                                        if (s > 0) showRegBtn(s);
+                                    }
+                                } catch (e) {}
+                            }, 0);
+                        }
+                        return result;
+                    };
+                    target.__suikaHooked = true;
+                } catch (e) {}
+            }
+
+            // 1) window.localStorage 후킹
+            hookSetItem(window.localStorage);
+
+            // 1b) cocos2d 로드 후 cc.sys.localStorage도 후킹 (window.localStorage가 아닐 수 있음)
+            const ccHookTimer = setInterval(() => {
+                try {
+                    if (typeof cc !== 'undefined' && cc.sys && cc.sys.localStorage) {
+                        if (cc.sys.localStorage !== window.localStorage) {
+                            hookSetItem(cc.sys.localStorage);
+                        }
+                        clearInterval(ccHookTimer);
                     }
-                    return result;
-                };
-            } catch (e) { /* swallow */ }
+                } catch (e) {}
+            }, 500);
+            setTimeout(() => clearInterval(ccHookTimer), 60000);
 
             // 2) 폴링 백업 — 후킹이 어떤 이유로 누락되어도 게임 종료를 감지
             (function pollPlayerData() {
@@ -279,6 +300,29 @@
                             }
                         }
                     } catch (e) {}
+                }, 1200);
+            })();
+
+            // 2b) localStorage 전체 변화 감시 — 어떤 키든 변경되면 게임 데이터 저장 가능성으로 간주
+            (function pollLocalStorageDelta() {
+                function snapshot() {
+                    let s = '';
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const k = localStorage.key(i);
+                        if (k && !/^swg_/.test(k)) {
+                            s += k + '=' + (localStorage.getItem(k) || '').length + '|';
+                        }
+                    }
+                    return s;
+                }
+                let last = snapshot();
+                setInterval(() => {
+                    const cur = snapshot();
+                    if (cur !== last) {
+                        last = cur;
+                        const sc = readCurrentGameScore();
+                        if (sc > 0) showRegBtn(sc);
+                    }
                 }, 1200);
             })();
 
