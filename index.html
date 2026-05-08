@@ -52,6 +52,7 @@
         </div>
         <ol id="smRankList" class="sm-rank-list"></ol>
         <div id="smRankEmpty" class="sm-rank-empty" style="display:none">아직 등록된 점수가 없습니다</div>
+        <button id="smRegScoreBtn" class="sm-item">📝 내 점수 등록</button>
         <a href="admin.html" id="suikaAdminLink" class="sm-item" style="display:none">⚙️ 관리자 (이미지 교체)</a>
         <button id="suikaLogout" class="sm-item logout">↪ 로그아웃</button>
         <div class="sm-visits">
@@ -202,16 +203,25 @@
                 return Number(data.score) || 0;
             }
             function readCurrentGameScore() {
-                // 모든 playerData 키 중 score 값 (가장 최근 것이 게임 종료 직후 점수)
+                // 1) playerData 키 우선 (cocos2d 게임 데이터)
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
                     if (k && /playerData/i.test(k)) {
                         try {
                             const d = JSON.parse(localStorage.getItem(k));
                             const s = Number(d && d.score);
-                            if (Number.isFinite(s)) return s;
+                            if (Number.isFinite(s) && s > 0) return s;
                         } catch (e) {}
                     }
+                }
+                // 2) 어떤 키든 JSON에 score 필드가 있는 것 (백업)
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (!k || /^swg_/.test(k)) continue; // 우리 자체 키 제외
+                    try {
+                        const d = JSON.parse(localStorage.getItem(k));
+                        if (d && typeof d.score === 'number' && d.score > 0) return d.score;
+                    } catch (e) {}
                 }
                 return 0;
             }
@@ -336,13 +346,26 @@
             const openReg = () => {
                 regErr.textContent = '';
                 regNick.value = localStorage.getItem('swg_last_nick') || '';
-                regScore.value = window.__suikaLastScore > 0 ? String(window.__suikaLastScore) : '';
+                // 점수 자동 추출: 모달 열 시점에 즉시 다시 한 번 localStorage 확인
+                const liveScore = readCurrentGameScore();
+                const best = Math.max(window.__suikaLastScore || 0, liveScore || 0);
+                if (best > 0) {
+                    window.__suikaLastScore = best;
+                    regScore.value = String(best);
+                } else {
+                    regScore.value = '';
+                    regErr.textContent = '게임을 한 번 끝낸 후 등록해주세요.';
+                }
                 regModal.classList.add('show');
                 setTimeout(() => regNick.focus(), 50);
             };
             const closeReg = () => regModal.classList.remove('show');
 
             document.getElementById('btnRegScore').addEventListener('click', openReg);
+            document.getElementById('smRegScoreBtn').addEventListener('click', () => {
+                close();
+                openReg();
+            });
             regCancel.addEventListener('click', closeReg);
             regModal.addEventListener('click', (e) => { if (e.target === regModal) closeReg(); });
 
