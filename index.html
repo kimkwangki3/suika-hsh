@@ -363,6 +363,50 @@
                 }, 1500);
             })();
 
+            // 0) ⭐ 가장 정확한 신호: 게임이 외부 서버에 점수를 보낼 때 가로챔
+            //    이 게임은 게임 종료 시 wesane.com/admin.php/Gamescore/saveGamescore 로 POST 보냄
+            //    HTTPS-HTTP Mixed Content로 차단되긴 하지만 호출 자체는 트리거되므로 우리가 잡을 수 있음
+            (function hookScoreSubmit() {
+                function captureFromBody(body) {
+                    try {
+                        const m = String(body || '').match(/gameScore=(\d+)/);
+                        if (m) {
+                            const sc = parseInt(m[1], 10);
+                            if (sc > 0) setTimeout(() => showRegBtn(sc), 0);
+                        }
+                    } catch (e) {}
+                }
+                function isScoreUrl(u) {
+                    return typeof u === 'string' && (/saveGamescore/i.test(u) || /\/Gamescore\//i.test(u));
+                }
+                // fetch
+                try {
+                    const origFetch = window.fetch;
+                    window.fetch = function (input, init) {
+                        try {
+                            const url = typeof input === 'string' ? input : (input && input.url) || '';
+                            if (isScoreUrl(url)) captureFromBody(init && init.body);
+                        } catch (e) {}
+                        return origFetch.apply(this, arguments);
+                    };
+                } catch (e) {}
+                // XMLHttpRequest
+                try {
+                    const OrigOpen = XMLHttpRequest.prototype.open;
+                    const OrigSend = XMLHttpRequest.prototype.send;
+                    XMLHttpRequest.prototype.open = function (method, url) {
+                        try { this.__suikaUrl = url; } catch (e) {}
+                        return OrigOpen.apply(this, arguments);
+                    };
+                    XMLHttpRequest.prototype.send = function (body) {
+                        try {
+                            if (isScoreUrl(this.__suikaUrl)) captureFromBody(body);
+                        } catch (e) {}
+                        return OrigSend.apply(this, arguments);
+                    };
+                } catch (e) {}
+            })();
+
             // 4) 새 게임 시작 감지 — scene tree에서 점수가 큰 값에서 작은 값으로 떨어지면
             //    게임 다시 시작으로 간주, 버튼 자동 숨김 (false positive 방지)
             (function pollNewGame() {
