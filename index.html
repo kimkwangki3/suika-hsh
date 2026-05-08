@@ -185,20 +185,24 @@
             }
 
             // 1) localStorage.setItem 후킹 — 게임이 점수를 저장하는 순간을 정확히 잡음
+            //    ⚠️ 우리 콜백은 setTimeout으로 비동기 처리하여 cocos2d 호출 스택과 완전 분리
             try {
                 const origSetItem = localStorage.setItem.bind(localStorage);
                 localStorage.setItem = function (key, value) {
                     const result = origSetItem(key, value);
-                    try {
-                        if (typeof key === 'string' && key.endsWith('playerData11')) {
-                            const data = JSON.parse(value);
-                            const s = pickScoreFromPlayerData(data);
-                            if (s > 0) showRegBtn(s);
-                        }
-                    } catch (e) {}
+                    if (typeof key === 'string' && key.endsWith('playerData11')) {
+                        const v = value;
+                        setTimeout(() => {
+                            try {
+                                const data = JSON.parse(v);
+                                const s = pickScoreFromPlayerData(data);
+                                if (s > 0) showRegBtn(s);
+                            } catch (e) { /* swallow */ }
+                        }, 0);
+                    }
                     return result;
                 };
-            } catch (e) {}
+            } catch (e) { /* swallow */ }
 
             // 2) 폴링 백업 — 후킹이 어떤 이유로 누락되어도 게임 종료를 감지
             (function pollPlayerData() {
