@@ -65,6 +65,10 @@ app.post('/api/scores', async (req, res) => {
     return res.status(400).json({ error: '점수가 올바르지 않습니다' });
   }
   try {
+    const dup = await pool.query('SELECT 1 FROM scores WHERE nickname = $1 LIMIT 1', [nick]);
+    if (dup.rowCount > 0) {
+      return res.status(409).json({ error: '이미 등록된 닉네임입니다. 다른 닉네임을 사용하세요.' });
+    }
     const { rows } = await pool.query(
       'INSERT INTO scores (nickname, score) VALUES ($1, $2) RETURNING id, nickname, score, created_at',
       [nick, Math.floor(s)]
