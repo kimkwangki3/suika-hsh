@@ -93,18 +93,27 @@ body::before {
 }
 
 #suikaTopbar .hb-reg {
-    background: rgba(255,255,255,0.18);
-    border: 1px solid rgba(255,255,255,0.35);
+    display: none;
+    background: linear-gradient(135deg, #FFD86B, #E8A700);
+    border: 1px solid rgba(255,255,255,0.5);
     color: #fff;
     width: 36px; height: 36px;
     border-radius: 10px;
     font-size: 16px;
     margin-right: 6px;
     cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
+    align-items: center;
+    justify-content: center;
     -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 4px 14px rgba(255,200,80,0.45);
+    animation: hb-reg-pulse 1.6s ease-in-out infinite;
 }
-#suikaTopbar .hb-reg:active { background: rgba(255,255,255,0.32); }
+#suikaTopbar .hb-reg.show { display: flex; }
+#suikaTopbar .hb-reg:active { transform: translateY(1px); }
+@keyframes hb-reg-pulse {
+    0%,100% { box-shadow: 0 4px 14px rgba(255,200,80,0.45); }
+    50% { box-shadow: 0 4px 20px rgba(255,200,80,0.85); }
+}
 
 /* ================ 사이드 메뉴 ================ */
 .menu-backdrop {

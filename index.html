@@ -18,7 +18,7 @@
     <meta name="x5-page-mode" content="app">
 
     <link rel="stylesheet" type="text/css" href="style-mobile.css" />
-    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=12" />
+    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=13" />
 </head>
 
 <body align="center">
@@ -53,7 +53,6 @@
         </div>
         <ol id="smRankList" class="sm-rank-list"></ol>
         <div id="smRankEmpty" class="sm-rank-empty" style="display:none">아직 등록된 점수가 없습니다</div>
-        <button id="smRegScoreBtn" class="sm-item">📝 내 점수 등록</button>
         <a href="admin.html" id="suikaAdminLink" class="sm-item" style="display:none">⚙️ 관리자 (이미지 교체)</a>
         <button id="suikaLogout" class="sm-item logout">↪ 로그아웃</button>
         <div class="sm-visits">
@@ -187,6 +186,7 @@
             // 게임 종료 시 cc.sys.localStorage('...playerData11')에 score/highScore가 저장됨
             // 이 setItem 호출을 후킹해서 정확한 종료 시점에 등록 버튼을 노출.
             const regBtn = document.getElementById('btnRegScore');
+            const regBtnTop = document.getElementById('suikaTopRegBtn');
             window.__suikaLastScore = 0;
 
             function showRegBtn(score) {
@@ -194,9 +194,11 @@
                     window.__suikaLastScore = score;
                 }
                 regBtn.classList.add('show');
+                regBtnTop.classList.add('show');
             }
             function hideRegBtn() {
                 regBtn.classList.remove('show');
+                regBtnTop.classList.remove('show');
             }
             function pickScoreFromPlayerData(data) {
                 // 항상 이번 게임의 score만 사용 (highScore는 누적치라 무시)
@@ -361,6 +363,60 @@
                 }, 1500);
             })();
 
+            // 4) 점수 정지 휴리스틱 — scene tree에서 가장 큰 정수 라벨이
+            //    3초 이상 변화 없으면 게임 종료로 간주 (가장 견고한 백업)
+            (function pollScoreStalled() {
+                let lastBig = -1;
+                let lastChangeAt = Date.now();
+                let started = false;
+                function readMaxIntLabel() {
+                    try {
+                        if (typeof cc === 'undefined' || !cc.director) return null;
+                        const scene = cc.director.getRunningScene && cc.director.getRunningScene();
+                        if (!scene) return null;
+                        let best = -1;
+                        function walk(node, depth) {
+                            if (!node || depth > 50) return;
+                            const cs = node._components || [];
+                            for (const c of cs) {
+                                if (!c) continue;
+                                const s = c.string || c._string;
+                                if (typeof s === 'string' && /^\d{1,9}$/.test(s.trim())) {
+                                    const n = parseInt(s.trim(), 10);
+                                    if (n > best) best = n;
+                                }
+                            }
+                            // 노드 자체가 라벨일 수 있음 (cocos2d-html5)
+                            if (typeof node.string === 'string' && /^\d{1,9}$/.test(node.string.trim())) {
+                                const n = parseInt(node.string.trim(), 10);
+                                if (n > best) best = n;
+                            }
+                            const ch = node._children || node.children;
+                            if (ch) for (const k of ch) walk(k, depth + 1);
+                        }
+                        walk(scene, 0);
+                        return best === -1 ? null : best;
+                    } catch (e) { return null; }
+                }
+                setInterval(() => {
+                    const v = readMaxIntLabel();
+                    if (v == null) return;
+                    if (v > 0) started = true;
+                    if (v !== lastBig) {
+                        lastBig = v;
+                        lastChangeAt = Date.now();
+                    } else if (started && v > 0) {
+                        const elapsed = Date.now() - lastChangeAt;
+                        if (elapsed >= 3000) {
+                            // 3초 동안 점수 변화 없음 → 게임 정지/종료
+                            const stored = readCurrentGameScore();
+                            const final = stored > 0 ? stored : v;
+                            showRegBtn(final);
+                        }
+                    }
+                }, 700);
+            })();
+
             // 디버그: 콘솔에서 __suikaDebug() 호출 시 현재 상태 확인
             window.__suikaDebug = function () {
                 const lines = ['=== suika debug ==='];
@@ -408,10 +464,6 @@
 
             document.getElementById('btnRegScore').addEventListener('click', openReg);
             document.getElementById('suikaTopRegBtn').addEventListener('click', openReg);
-            document.getElementById('smRegScoreBtn').addEventListener('click', () => {
-                close();
-                openReg();
-            });
             regCancel.addEventListener('click', closeReg);
             regModal.addEventListener('click', (e) => { if (e.target === regModal) closeReg(); });
 
