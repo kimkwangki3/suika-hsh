@@ -178,10 +178,23 @@
                 regBtn.classList.remove('show');
             }
             function pickScoreFromPlayerData(data) {
+                // 항상 이번 게임의 score만 사용 (highScore는 누적치라 무시)
                 if (!data) return 0;
-                const sc = Number(data.score) || 0;
-                const hs = Number(data.highScore) || 0;
-                return Math.max(sc, hs);
+                return Number(data.score) || 0;
+            }
+            function readCurrentGameScore() {
+                // 모든 playerData 키 중 score 값 (가장 최근 것이 게임 종료 직후 점수)
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && /playerData/i.test(k)) {
+                        try {
+                            const d = JSON.parse(localStorage.getItem(k));
+                            const s = Number(d && d.score);
+                            if (Number.isFinite(s)) return s;
+                        } catch (e) {}
+                    }
+                }
+                return 0;
             }
 
             // 1) localStorage.setItem 후킹 — 게임이 점수를 저장하는 순간을 정확히 잡음
@@ -240,8 +253,8 @@
                 }, 1200);
             })();
 
-            // 3) 게임오버 화면 감지 백업 — cocos2d scene에서 결과 화면을 의미하는 텍스트가 보이면 게임 종료로 간주
-            //    "전 세계", "이겼", "유저", "다시" 등 결과 화면 키워드를 가진 라벨이 등장하면 노출
+            // 3) 게임오버 화면 감지 백업 — cocos2d scene에서 결과 화면 텍스트 키워드가 보이면
+            //    게임 종료로 간주. 점수 자체는 항상 localStorage에서 읽어옴 (highScore와 혼동 방지).
             (function pollGameOverText() {
                 const KEYWORDS = ['전 세계', '이겼', '유저', '%의', '世界', '记录', 'World'];
                 setInterval(() => {
@@ -250,7 +263,6 @@
                         const scene = cc.director.getRunningScene && cc.director.getRunningScene();
                         if (!scene) return;
                         let found = false;
-                        let bestScore = 0;
                         function walk(node, depth) {
                             if (!node || depth > 30 || found) return;
                             const comps = node._components || [];
@@ -259,11 +271,7 @@
                                 const s = c.string || c._string;
                                 if (typeof s === 'string') {
                                     for (const kw of KEYWORDS) {
-                                        if (s.indexOf(kw) !== -1) { found = true; break; }
-                                    }
-                                    if (/^\d{1,9}$/.test(s.trim())) {
-                                        const n = parseInt(s.trim(), 10);
-                                        if (n > bestScore) bestScore = n;
+                                        if (s.indexOf(kw) !== -1) { found = true; return; }
                                     }
                                 }
                             }
@@ -271,8 +279,9 @@
                             if (ch) for (const k of ch) walk(k, depth + 1);
                         }
                         walk(scene, 0);
-                        if (found && bestScore > 0) {
-                            showRegBtn(bestScore);
+                        if (found) {
+                            const sc = readCurrentGameScore();
+                            if (sc > 0) showRegBtn(sc);
                         }
                     } catch (e) {}
                 }, 1500);
