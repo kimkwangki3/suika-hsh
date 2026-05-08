@@ -18,7 +18,7 @@
     <meta name="x5-page-mode" content="app">
 
     <link rel="stylesheet" type="text/css" href="style-mobile.css" />
-    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=10" />
+    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=11" />
 </head>
 
 <body align="center">
@@ -54,6 +54,12 @@
         <div id="smRankEmpty" class="sm-rank-empty" style="display:none">아직 등록된 점수가 없습니다</div>
         <a href="admin.html" id="suikaAdminLink" class="sm-item" style="display:none">⚙️ 관리자 (이미지 교체)</a>
         <button id="suikaLogout" class="sm-item logout">↪ 로그아웃</button>
+        <div class="sm-visits">
+            <span class="sm-visits-ico">👥</span>
+            <span class="sm-visits-label">총 접속</span>
+            <span class="sm-visits-count" id="smVisitsCount">-</span>
+            <span class="sm-visits-suffix">회</span>
+        </div>
         <div class="sm-foot">© Hong Sung-hoon · Rebuilding Korea Party</div>
     </nav>
 
@@ -157,6 +163,19 @@
                     smRankList.innerHTML = '';
                     smRankEmpty.textContent = '순위를 불러오지 못했습니다';
                     smRankEmpty.style.display = '';
+                }
+                loadVisits();
+            }
+            // ===== 총 접속 카운트 표시 =====
+            const smVisits = document.getElementById('smVisitsCount');
+            async function loadVisits() {
+                try {
+                    const r = await fetch('/api/visits', { cache: 'no-store' });
+                    if (!r.ok) throw new Error('api');
+                    const d = await r.json();
+                    smVisits.textContent = Number(d.value).toLocaleString();
+                } catch (e) {
+                    smVisits.textContent = '-';
                 }
             }
             document.getElementById('smRankRefresh').addEventListener('click', loadSideRank);

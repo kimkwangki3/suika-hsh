@@ -251,6 +251,28 @@ body::before {
     background: linear-gradient(180deg, rgba(255,216,107,0.05), transparent);
 }
 
+.side-menu .sm-visits {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, rgba(0,160,233,0.08), rgba(21,36,132,0.04));
+    border-top: 1px solid #F4F6FB;
+    font-size: 12px;
+    font-weight: 700;
+    color: #4A4A4A;
+}
+.side-menu .sm-visits-ico { font-size: 14px; }
+.side-menu .sm-visits-label { color: #8A8A8A; }
+.side-menu .sm-visits-count {
+    margin-left: auto;
+    font-weight: 900;
+    color: #152484;
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
+}
+.side-menu .sm-visits-suffix { color: #8A8A8A; font-weight: 700; }
+
 /* ================ 게임 캔버스 영역 ================ */
 #canvasDiv {
     position: absolute !important;

@@ -20,6 +20,14 @@ async function initDB() {
     )
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_scores_score ON scores (score DESC)`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS counters (
+      name VARCHAR(32) PRIMARY KEY,
+      value BIGINT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`INSERT INTO counters (name, value) VALUES ('visits', 0) ON CONFLICT (name) DO NOTHING`);
 }
 
 app.use(express.json({ limit: '32kb' }));
@@ -62,6 +70,26 @@ app.post('/api/scores', async (req, res) => {
       [nick, Math.floor(s)]
     );
     res.json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: 'db_error' });
+  }
+});
+
+app.get('/api/visits', async (req, res) => {
+  try {
+    const { rows } = await pool.query("SELECT value FROM counters WHERE name='visits'");
+    res.json({ value: rows[0] ? Number(rows[0].value) : 0 });
+  } catch (e) {
+    res.status(500).json({ error: 'db_error' });
+  }
+});
+
+app.post('/api/visits', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "UPDATE counters SET value = value + 1, updated_at = NOW() WHERE name='visits' RETURNING value"
+    );
+    res.json({ value: rows[0] ? Number(rows[0].value) : 0 });
   } catch (e) {
     res.status(500).json({ error: 'db_error' });
   }
