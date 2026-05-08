@@ -145,14 +145,18 @@ async function loadTop3() {
   }
 }
 
+async function bumpVisits() {
+  try { await fetch('/api/visits', { method: 'POST', cache: 'no-store' }); } catch (e) {}
+}
+
 (async () => {
   await SWGApp.init();
+  bumpVisits();
   loadTop3();
   if (SWGApp.session()) { location.href = 'index.html'; return; }
 
   document.getElementById('btnStart').addEventListener('click', async () => {
     await SWGApp.guest();
-    try { await fetch('/api/visits', { method: 'POST', cache: 'no-store' }); } catch (e) {}
     location.href = 'index.html';
   });
 
