@@ -18,7 +18,7 @@
     <meta name="x5-page-mode" content="app">
 
     <link rel="stylesheet" type="text/css" href="style-mobile.css" />
-    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=9" />
+    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=10" />
 </head>
 
 <body align="center">
@@ -162,41 +162,64 @@
             document.getElementById('smRankRefresh').addEventListener('click', loadSideRank);
             loadSideRank();
 
-            // ===== 게임 점수 자동 추적 =====
-            // cocos2d 씬 트리를 순회해 cc.Label/숫자 라벨을 수집, 가장 큰 정수 = 현재 점수
-            window.__suikaCurrentScore = 0;
-            function readCocosScore() {
-                try {
-                    if (typeof cc === 'undefined' || !cc.director) return null;
-                    const scene = cc.director.getRunningScene && cc.director.getRunningScene();
-                    if (!scene) return null;
-                    const found = [];
-                    function walk(node, depth) {
-                        if (!node || depth > 30) return;
-                        const comps = node._components || node.getComponents && node.getComponents(cc.Component) || [];
-                        for (const c of comps) {
-                            if (!c) continue;
-                            const s = c.string || (c._string);
-                            if (typeof s === 'string' && /^\d{1,9}$/.test(s.trim())) {
-                                found.push(parseInt(s.trim(), 10));
+            // ===== 게임 종료 감지 + 점수 자동 추출 =====
+            // 게임 종료 시 cc.sys.localStorage('...playerData11')에 score/highScore가 저장됨
+            // 이 setItem 호출을 후킹해서 정확한 종료 시점에 등록 버튼을 노출.
+            const regBtn = document.getElementById('btnRegScore');
+            window.__suikaLastScore = 0;
+
+            function showRegBtn(score) {
+                if (Number.isFinite(score) && score > 0) {
+                    window.__suikaLastScore = score;
+                }
+                regBtn.classList.add('show');
+            }
+            function hideRegBtn() {
+                regBtn.classList.remove('show');
+            }
+            function pickScoreFromPlayerData(data) {
+                if (!data) return 0;
+                const sc = Number(data.score) || 0;
+                const hs = Number(data.highScore) || 0;
+                return Math.max(sc, hs);
+            }
+
+            // 1) localStorage.setItem 후킹 — 게임이 점수를 저장하는 순간을 정확히 잡음
+            try {
+                const origSetItem = localStorage.setItem.bind(localStorage);
+                localStorage.setItem = function (key, value) {
+                    const result = origSetItem(key, value);
+                    try {
+                        if (typeof key === 'string' && key.endsWith('playerData11')) {
+                            const data = JSON.parse(value);
+                            const s = pickScoreFromPlayerData(data);
+                            if (s > 0) showRegBtn(s);
+                        }
+                    } catch (e) {}
+                    return result;
+                };
+            } catch (e) {}
+
+            // 2) 폴링 백업 — 후킹이 어떤 이유로 누락되어도 게임 종료를 감지
+            (function pollPlayerData() {
+                let lastSeen = null;
+                setInterval(() => {
+                    try {
+                        for (let i = 0; i < localStorage.length; i++) {
+                            const k = localStorage.key(i);
+                            if (k && k.endsWith('playerData11')) {
+                                const data = JSON.parse(localStorage.getItem(k));
+                                const sc = Number(data.score) || 0;
+                                if (lastSeen !== null && sc !== lastSeen && sc > 0) {
+                                    showRegBtn(pickScoreFromPlayerData(data));
+                                }
+                                lastSeen = sc;
+                                break;
                             }
                         }
-                        const ch = node._children || node.children;
-                        if (ch) for (const k of ch) walk(k, depth + 1);
-                    }
-                    walk(scene, 0);
-                    return found.length ? Math.max(...found) : null;
-                } catch (e) {
-                    return null;
-                }
-            }
-            // 매초 가장 큰 점수 추적 (게임이 끝나도 직전 값 유지)
-            setInterval(() => {
-                const v = readCocosScore();
-                if (v != null && v > window.__suikaCurrentScore) {
-                    window.__suikaCurrentScore = v;
-                }
-            }, 1000);
+                    } catch (e) {}
+                }, 1500);
+            })();
 
             // ===== 점수 등록 모달 =====
             const regModal = document.getElementById('regModal');
@@ -209,10 +232,7 @@
             const openReg = () => {
                 regErr.textContent = '';
                 regNick.value = localStorage.getItem('swg_last_nick') || '';
-                // 자동 점수 채우기 (지금 화면의 가장 큰 라벨 + 누적 최고치 중 큰 값)
-                const live = readCocosScore();
-                const best = Math.max(window.__suikaCurrentScore || 0, live || 0);
-                regScore.value = best > 0 ? String(best) : '';
+                regScore.value = window.__suikaLastScore > 0 ? String(window.__suikaLastScore) : '';
                 regModal.classList.add('show');
                 setTimeout(() => regNick.focus(), 50);
             };
@@ -239,6 +259,8 @@
                     if (!r.ok) throw new Error(data.error || '등록 실패');
                     localStorage.setItem('swg_last_nick', nick);
                     closeReg();
+                    hideRegBtn();
+                    window.__suikaLastScore = 0;
                     loadSideRank();
                     alert('등록 완료! 메뉴에서 순위 확인하세요.');
                 } catch (ex) {

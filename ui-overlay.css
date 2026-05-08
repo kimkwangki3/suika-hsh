@@ -312,6 +312,7 @@ body::before {
 
 /* ================ 점수 등록 플로팅 버튼 + 모달 ================ */
 .reg-fab {
+    display: none;
     position: fixed;
     right: 14px;
     bottom: 18px;
@@ -320,14 +321,21 @@ body::before {
     color: #fff;
     border: none;
     border-radius: 999px;
-    padding: 11px 18px;
+    padding: 12px 20px;
     font-size: 13px;
     font-weight: 800;
     box-shadow: 0 8px 22px rgba(21,36,132,0.4);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    animation: reg-fab-pop .35s ease-out;
 }
+.reg-fab.show { display: inline-block; }
 .reg-fab:active { transform: translateY(2px); }
+@keyframes reg-fab-pop {
+    0% { transform: scale(0.6); opacity: 0; }
+    70% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
 
 .reg-modal {
     position: fixed;
