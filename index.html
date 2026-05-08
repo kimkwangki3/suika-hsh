@@ -18,7 +18,7 @@
     <meta name="x5-page-mode" content="app">
 
     <link rel="stylesheet" type="text/css" href="style-mobile.css" />
-    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=8" />
+    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=9" />
 </head>
 
 <body align="center">
@@ -46,7 +46,12 @@
             <span id="suikaRole" class="sm-role"></span>
         </div>
         <a href="index.html" class="sm-item active">🍉 게임</a>
-        <a href="ranking.html" class="sm-item">🏆 순위 보기</a>
+        <div class="sm-rank-head">
+            <span>🏆 순위 TOP 5</span>
+            <button id="smRankRefresh" class="sm-rank-refresh" type="button" title="새로고침">⟳</button>
+        </div>
+        <ol id="smRankList" class="sm-rank-list"></ol>
+        <div id="smRankEmpty" class="sm-rank-empty" style="display:none">아직 등록된 점수가 없습니다</div>
         <a href="admin.html" id="suikaAdminLink" class="sm-item" style="display:none">⚙️ 관리자 (이미지 교체)</a>
         <button id="suikaLogout" class="sm-item logout">↪ 로그아웃</button>
         <div class="sm-foot">© Hong Sung-hoon · Rebuilding Korea Party</div>
@@ -61,14 +66,14 @@
     <div id="regModal" class="reg-modal">
       <div class="reg-box">
         <div class="reg-title">🏆 점수 등록</div>
-        <div class="reg-desc">게임 종료 후 닉네임과 점수를 입력하세요.</div>
+        <div class="reg-desc">닉네임만 입력하면 됩니다. 점수는 자동입니다.</div>
         <div class="reg-row">
           <label for="regNick">닉네임</label>
           <input type="text" id="regNick" maxlength="20" placeholder="1~20자" autocomplete="off">
         </div>
         <div class="reg-row">
-          <label for="regScore">점수</label>
-          <input type="number" id="regScore" min="0" max="99999999" inputmode="numeric" placeholder="예: 1234">
+          <label for="regScore">점수 (자동)</label>
+          <input type="number" id="regScore" min="0" max="99999999" inputmode="numeric" readonly placeholder="게임에서 자동으로 가져옴">
         </div>
         <div class="reg-err" id="regErr"></div>
         <div class="reg-actions">
@@ -115,7 +120,7 @@
             // 메뉴 열고 닫기
             const menu = document.getElementById('suikaMenu');
             const bd = document.getElementById('suikaMenuBackdrop');
-            const open = () => { menu.classList.add('open'); bd.classList.add('show'); };
+            const open = () => { menu.classList.add('open'); bd.classList.add('show'); loadSideRank(); };
             const close = () => { menu.classList.remove('open'); bd.classList.remove('show'); };
             document.getElementById('suikaMenuBtn').addEventListener('click', open);
             bd.addEventListener('click', close);
@@ -123,6 +128,75 @@
                 SWGApp.logout();
                 location.href = 'login.html';
             });
+
+            // ===== 사이드 메뉴 1~5위 =====
+            const smRankList = document.getElementById('smRankList');
+            const smRankEmpty = document.getElementById('smRankEmpty');
+            function escapeHtml(s) {
+                return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            }
+            async function loadSideRank() {
+                try {
+                    const r = await fetch('/api/top?limit=5', { cache: 'no-store' });
+                    if (!r.ok) throw new Error('api');
+                    const rows = await r.json();
+                    if (!rows.length) {
+                        smRankList.innerHTML = '';
+                        smRankEmpty.style.display = '';
+                        return;
+                    }
+                    smRankEmpty.style.display = 'none';
+                    smRankList.innerHTML = rows.map((row, i) => `
+                        <li class="r${i+1}">
+                            <span class="rb">${i+1}</span>
+                            <span class="nk">${escapeHtml(row.nickname)}</span>
+                            <span class="sc">${Number(row.score).toLocaleString()}</span>
+                        </li>
+                    `).join('');
+                } catch (e) {
+                    smRankList.innerHTML = '';
+                    smRankEmpty.textContent = '순위를 불러오지 못했습니다';
+                    smRankEmpty.style.display = '';
+                }
+            }
+            document.getElementById('smRankRefresh').addEventListener('click', loadSideRank);
+            loadSideRank();
+
+            // ===== 게임 점수 자동 추적 =====
+            // cocos2d 씬 트리를 순회해 cc.Label/숫자 라벨을 수집, 가장 큰 정수 = 현재 점수
+            window.__suikaCurrentScore = 0;
+            function readCocosScore() {
+                try {
+                    if (typeof cc === 'undefined' || !cc.director) return null;
+                    const scene = cc.director.getRunningScene && cc.director.getRunningScene();
+                    if (!scene) return null;
+                    const found = [];
+                    function walk(node, depth) {
+                        if (!node || depth > 30) return;
+                        const comps = node._components || node.getComponents && node.getComponents(cc.Component) || [];
+                        for (const c of comps) {
+                            if (!c) continue;
+                            const s = c.string || (c._string);
+                            if (typeof s === 'string' && /^\d{1,9}$/.test(s.trim())) {
+                                found.push(parseInt(s.trim(), 10));
+                            }
+                        }
+                        const ch = node._children || node.children;
+                        if (ch) for (const k of ch) walk(k, depth + 1);
+                    }
+                    walk(scene, 0);
+                    return found.length ? Math.max(...found) : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+            // 매초 가장 큰 점수 추적 (게임이 끝나도 직전 값 유지)
+            setInterval(() => {
+                const v = readCocosScore();
+                if (v != null && v > window.__suikaCurrentScore) {
+                    window.__suikaCurrentScore = v;
+                }
+            }, 1000);
 
             // ===== 점수 등록 모달 =====
             const regModal = document.getElementById('regModal');
@@ -135,7 +209,10 @@
             const openReg = () => {
                 regErr.textContent = '';
                 regNick.value = localStorage.getItem('swg_last_nick') || '';
-                regScore.value = '';
+                // 자동 점수 채우기 (지금 화면의 가장 큰 라벨 + 누적 최고치 중 큰 값)
+                const live = readCocosScore();
+                const best = Math.max(window.__suikaCurrentScore || 0, live || 0);
+                regScore.value = best > 0 ? String(best) : '';
                 regModal.classList.add('show');
                 setTimeout(() => regNick.focus(), 50);
             };
@@ -162,7 +239,8 @@
                     if (!r.ok) throw new Error(data.error || '등록 실패');
                     localStorage.setItem('swg_last_nick', nick);
                     closeReg();
-                    alert('등록 완료! 순위 보기에서 확인하세요.');
+                    loadSideRank();
+                    alert('등록 완료! 메뉴에서 순위 확인하세요.');
                 } catch (ex) {
                     regErr.textContent = ex.message || '등록 실패';
                 } finally {

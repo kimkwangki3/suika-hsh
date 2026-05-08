@@ -174,6 +174,83 @@ body::before {
     background: #FAFBFE;
 }
 
+.side-menu .sm-rank-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px 4px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #152484;
+    letter-spacing: 0.1em;
+    background: linear-gradient(180deg, rgba(255,216,107,0.12), rgba(0,160,233,0.05));
+    border-top: 1px solid #F4F6FB;
+}
+.side-menu .sm-rank-refresh {
+    background: transparent;
+    border: 1px solid rgba(0,160,233,0.3);
+    color: #00A0E9;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.side-menu .sm-rank-refresh:active { background: rgba(0,160,233,0.15); }
+
+.side-menu .sm-rank-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 14px 10px;
+    background: linear-gradient(180deg, rgba(255,216,107,0.08), transparent);
+}
+.side-menu .sm-rank-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px;
+    font-size: 12px;
+    border-bottom: 1px dashed rgba(0,0,0,0.05);
+}
+.side-menu .sm-rank-list li:last-child { border-bottom: none; }
+.side-menu .sm-rank-list .rb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 10px;
+    color: #fff;
+    flex-shrink: 0;
+    background: #C0C5D0;
+}
+.side-menu .sm-rank-list li.r1 .rb { background: linear-gradient(135deg, #FFD86B, #E8A700); }
+.side-menu .sm-rank-list li.r2 .rb { background: linear-gradient(135deg, #D6DBE3, #9AA3B2); }
+.side-menu .sm-rank-list li.r3 .rb { background: linear-gradient(135deg, #E0A57A, #B36A3A); }
+.side-menu .sm-rank-list .nk {
+    flex: 1;
+    font-weight: 700;
+    color: #1A1A1A;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.side-menu .sm-rank-list .sc {
+    font-weight: 800;
+    color: #152484;
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+}
+.side-menu .sm-rank-empty {
+    padding: 12px 18px;
+    font-size: 11px;
+    color: #8A8A8A;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(255,216,107,0.05), transparent);
+}
+
 /* ================ 게임 캔버스 영역 ================ */
 #canvasDiv {
     position: absolute !important;

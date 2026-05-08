@@ -33,28 +33,14 @@ app.use(express.static(__dirname, {
   }
 }));
 
-app.get('/api/top3', async (req, res) => {
+app.get('/api/top', async (req, res) => {
+  const limit = Math.max(1, Math.min(30, parseInt(req.query.limit) || 10));
   try {
     const { rows } = await pool.query(
-      'SELECT nickname, score, created_at FROM scores ORDER BY score DESC, created_at ASC LIMIT 3'
+      'SELECT nickname, score, created_at FROM scores ORDER BY score DESC, created_at ASC LIMIT $1',
+      [limit]
     );
     res.json(rows);
-  } catch (e) {
-    res.status(500).json({ error: 'db_error' });
-  }
-});
-
-app.get('/api/top', async (req, res) => {
-  const page = Math.max(1, Math.min(3, parseInt(req.query.page) || 1));
-  const perPage = 10;
-  const offset = (page - 1) * perPage;
-  try {
-    const { rows } = await pool.query(
-      'SELECT nickname, score, created_at FROM scores ORDER BY score DESC, created_at ASC LIMIT $1 OFFSET $2',
-      [perPage, offset]
-    );
-    const { rows: countRows } = await pool.query('SELECT COUNT(*)::int AS c FROM scores');
-    res.json({ page, perPage, total: Math.min(30, countRows[0].c), rows });
   } catch (e) {
     res.status(500).json({ error: 'db_error' });
   }
