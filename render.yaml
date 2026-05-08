@@ -1,9 +1,21 @@
+databases:
+  - name: suika-hsh-db
+    plan: free
+    databaseName: suika
+    user: suika
+
 services:
   - type: web
     name: suika-hsh
-    runtime: static
-    buildCommand: ""
-    staticPublishPath: .
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: suika-hsh-db
+          property: connectionString
     headers:
       - path: /sw.js
         name: Service-Worker-Allowed

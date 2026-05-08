@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#152484">
 <title>홍성훈 · 수박게임</title>
-<link rel="stylesheet" href="ui-overlay.css?v=7">
+<link rel="stylesheet" href="ui-overlay.css?v=8">
 <style>
   body {
     margin: 0; padding: 0;
@@ -16,11 +16,11 @@
       url('rpdla.png?v=4') center center / cover no-repeat fixed;
     display: flex; align-items: center; justify-content: center;
     font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-    overflow: hidden;
+    overflow: auto;
   }
   .start-wrap {
     position: relative; z-index: 2;
-    width: 100%; max-width: 360px; padding: 36px 28px 24px;
+    width: 100%; max-width: 360px; padding: 32px 26px 22px;
     margin: 16px;
     background: rgba(255,255,255,0.97);
     border-radius: 24px;
@@ -28,26 +28,58 @@
     text-align: center;
   }
   .brand-circle {
-    width: 84px; height: 84px;
-    margin: 0 auto 14px;
+    width: 76px; height: 76px;
+    margin: 0 auto 12px;
     background: linear-gradient(135deg, #152484, #00A0E9);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 32px; font-weight: 900;
+    color: #fff; font-size: 30px; font-weight: 900;
     box-shadow: 0 8px 20px rgba(21,36,132,0.3);
   }
-  .brand-name { font-size: 24px; font-weight: 900; color: #152484; letter-spacing: -0.02em; }
-  .brand-party { font-size: 12px; font-weight: 700; color: #00A0E9; letter-spacing: 0.2em; margin-top: 4px; margin-bottom: 14px; }
+  .brand-name { font-size: 22px; font-weight: 900; color: #152484; letter-spacing: -0.02em; }
+  .brand-party { font-size: 11px; font-weight: 700; color: #00A0E9; letter-spacing: 0.2em; margin-top: 3px; margin-bottom: 10px; }
   .game-title {
-    font-size: 17px; font-weight: 700; color: #1A1A1A;
-    margin: 6px 0 28px; padding: 8px 18px;
+    font-size: 15px; font-weight: 700; color: #1A1A1A;
+    margin: 4px 0 18px; padding: 7px 16px;
     background: #F4F6FB; border-radius: 999px; display: inline-block;
   }
+
+  .top3 {
+    margin: 0 0 18px;
+    padding: 12px 14px 10px;
+    background: linear-gradient(135deg, rgba(255,216,107,0.12), rgba(0,160,233,0.08));
+    border-radius: 14px;
+    border: 1px solid rgba(0,160,233,0.18);
+    text-align: left;
+  }
+  .top3-title {
+    font-size: 11px; font-weight: 800; color: #152484;
+    letter-spacing: 0.12em; margin-bottom: 8px; text-align: center;
+  }
+  .top3 ol { list-style: none; margin: 0; padding: 0; }
+  .top3 li {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 0; font-size: 13px;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+  }
+  .top3 li:last-child { border-bottom: none; }
+  .rank-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    font-weight: 800; font-size: 11px; color: #fff; flex-shrink: 0;
+  }
+  .rank-badge.r1 { background: linear-gradient(135deg, #FFD86B, #E8A700); }
+  .rank-badge.r2 { background: linear-gradient(135deg, #D6DBE3, #9AA3B2); }
+  .rank-badge.r3 { background: linear-gradient(135deg, #E0A57A, #B36A3A); }
+  .top3 .nick { font-weight: 700; color: #1A1A1A; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .top3 .score { font-weight: 800; color: #152484; font-variant-numeric: tabular-nums; }
+  .top3-empty { font-size: 12px; color: #8A8A8A; text-align: center; padding: 6px 0; }
+
   .btn-start {
-    display: block; width: 100%; padding: 18px;
+    display: block; width: 100%; padding: 16px;
     background: linear-gradient(135deg, #152484, #00A0E9);
     color: #fff; border: none; border-radius: 16px;
-    font-size: 18px; font-weight: 900;
+    font-size: 17px; font-weight: 900;
     cursor: pointer;
     box-shadow: 0 10px 24px rgba(21,36,132,0.35);
     -webkit-tap-highlight-color: transparent;
@@ -55,7 +87,7 @@
   }
   .btn-start:active { transform: translateY(2px); }
   .admin-link {
-    display: inline-block; margin-top: 16px;
+    display: inline-block; margin-top: 14px;
     font-size: 11px; color: #8A8A8A; text-decoration: none;
     letter-spacing: 0.05em;
     padding: 6px 10px;
@@ -69,14 +101,53 @@
     <div class="brand-name">홍성훈</div>
     <div class="brand-party">조 국 혁 신 당</div>
     <div class="game-title">🍉 수박게임</div>
+
+    <div class="top3">
+      <div class="top3-title">🏆 명예의 전당 TOP 3</div>
+      <ol id="top3List"></ol>
+      <div id="top3Empty" class="top3-empty" style="display:none">아직 등록된 점수가 없습니다</div>
+    </div>
+
     <button id="btnStart" class="btn-start">▶ 시작하기</button>
     <a href="#" id="adminLink" class="admin-link">관리자 로그인</a>
   </main>
 
 <script src="js/swg-app.js?v=4"></script>
 <script>
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function loadTop3() {
+  const ol = document.getElementById('top3List');
+  const empty = document.getElementById('top3Empty');
+  try {
+    const res = await fetch('/api/top3', { cache: 'no-store' });
+    if (!res.ok) throw new Error('api error');
+    const rows = await res.json();
+    if (!rows.length) {
+      ol.innerHTML = '';
+      empty.style.display = '';
+      return;
+    }
+    empty.style.display = 'none';
+    ol.innerHTML = rows.map((r, i) => `
+      <li>
+        <span class="rank-badge r${i+1}">${i+1}</span>
+        <span class="nick">${escapeHtml(r.nickname)}</span>
+        <span class="score">${Number(r.score).toLocaleString()}</span>
+      </li>
+    `).join('');
+  } catch (e) {
+    ol.innerHTML = '';
+    empty.textContent = '순위를 불러오지 못했습니다';
+    empty.style.display = '';
+  }
+}
+
 (async () => {
   await SWGApp.init();
+  loadTop3();
   if (SWGApp.session()) { location.href = 'index.html'; return; }
 
   document.getElementById('btnStart').addEventListener('click', async () => {

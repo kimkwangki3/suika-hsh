@@ -18,7 +18,7 @@
     <meta name="x5-page-mode" content="app">
 
     <link rel="stylesheet" type="text/css" href="style-mobile.css" />
-    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=7" />
+    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=8" />
 </head>
 
 <body align="center">
@@ -46,12 +46,37 @@
             <span id="suikaRole" class="sm-role"></span>
         </div>
         <a href="index.html" class="sm-item active">🍉 게임</a>
+        <a href="ranking.html" class="sm-item">🏆 순위 보기</a>
         <a href="admin.html" id="suikaAdminLink" class="sm-item" style="display:none">⚙️ 관리자 (이미지 교체)</a>
         <button id="suikaLogout" class="sm-item logout">↪ 로그아웃</button>
         <div class="sm-foot">© Hong Sung-hoon · Rebuilding Korea Party</div>
     </nav>
 
     <div style="align:center;display: none"><img src="res/share.jpg" width="10%" /></div>
+
+    <!-- 점수 등록 플로팅 버튼 -->
+    <button id="btnRegScore" class="reg-fab">📝 점수 등록</button>
+
+    <!-- 점수 등록 모달 -->
+    <div id="regModal" class="reg-modal">
+      <div class="reg-box">
+        <div class="reg-title">🏆 점수 등록</div>
+        <div class="reg-desc">게임 종료 후 닉네임과 점수를 입력하세요.</div>
+        <div class="reg-row">
+          <label for="regNick">닉네임</label>
+          <input type="text" id="regNick" maxlength="20" placeholder="1~20자" autocomplete="off">
+        </div>
+        <div class="reg-row">
+          <label for="regScore">점수</label>
+          <input type="number" id="regScore" min="0" max="99999999" inputmode="numeric" placeholder="예: 1234">
+        </div>
+        <div class="reg-err" id="regErr"></div>
+        <div class="reg-actions">
+          <button class="reg-btn reg-cancel" id="regCancel" type="button">취소</button>
+          <button class="reg-btn reg-submit" id="regSubmit" type="button">등록하기</button>
+        </div>
+      </div>
+    </div>
 
     <div id="canvasDiv">
         <canvas id="GameCanvas" oncontextmenu="event.preventDefault()" tabindex="0"></canvas>
@@ -97,6 +122,52 @@
             document.getElementById('suikaLogout').addEventListener('click', () => {
                 SWGApp.logout();
                 location.href = 'login.html';
+            });
+
+            // ===== 점수 등록 모달 =====
+            const regModal = document.getElementById('regModal');
+            const regNick = document.getElementById('regNick');
+            const regScore = document.getElementById('regScore');
+            const regErr = document.getElementById('regErr');
+            const regSubmit = document.getElementById('regSubmit');
+            const regCancel = document.getElementById('regCancel');
+
+            const openReg = () => {
+                regErr.textContent = '';
+                regNick.value = localStorage.getItem('swg_last_nick') || '';
+                regScore.value = '';
+                regModal.classList.add('show');
+                setTimeout(() => regNick.focus(), 50);
+            };
+            const closeReg = () => regModal.classList.remove('show');
+
+            document.getElementById('btnRegScore').addEventListener('click', openReg);
+            regCancel.addEventListener('click', closeReg);
+            regModal.addEventListener('click', (e) => { if (e.target === regModal) closeReg(); });
+
+            regSubmit.addEventListener('click', async () => {
+                regErr.textContent = '';
+                const nick = regNick.value.trim();
+                const score = parseInt(regScore.value, 10);
+                if (nick.length < 1 || nick.length > 20) { regErr.textContent = '닉네임은 1~20자'; return; }
+                if (!Number.isFinite(score) || score < 0 || score > 99999999) { regErr.textContent = '점수가 올바르지 않습니다'; return; }
+                regSubmit.disabled = true; regCancel.disabled = true;
+                try {
+                    const r = await fetch('/api/scores', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nickname: nick, score })
+                    });
+                    const data = await r.json();
+                    if (!r.ok) throw new Error(data.error || '등록 실패');
+                    localStorage.setItem('swg_last_nick', nick);
+                    closeReg();
+                    alert('등록 완료! 순위 보기에서 확인하세요.');
+                } catch (ex) {
+                    regErr.textContent = ex.message || '등록 실패';
+                } finally {
+                    regSubmit.disabled = false; regCancel.disabled = false;
+                }
             });
         })();
     </script>
