@@ -95,6 +95,27 @@ app.post('/api/visits', async (req, res) => {
   }
 });
 
+app.post('/api/admin/rename', async (req, res) => {
+  const { password, from, to } = req.body || {};
+  if (password !== 'admin1234') {
+    return res.status(403).json({ error: 'invalid_password' });
+  }
+  if (typeof from !== 'string' || typeof to !== 'string' ||
+      from.trim().length < 1 || from.trim().length > 20 ||
+      to.trim().length < 1 || to.trim().length > 20) {
+    return res.status(400).json({ error: 'invalid_input' });
+  }
+  try {
+    const { rowCount } = await pool.query(
+      'UPDATE scores SET nickname = $1 WHERE nickname = $2',
+      [to.trim(), from.trim()]
+    );
+    res.json({ updated: rowCount });
+  } catch (e) {
+    res.status(500).json({ error: 'db_error' });
+  }
+});
+
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
