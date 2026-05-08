@@ -346,8 +346,9 @@
                     closeReg();
                     hideRegBtn();
                     window.__suikaLastScore = 0;
-                    loadSideRank();
-                    alert('등록 완료! 메뉴에서 순위 확인하세요.');
+                    alert('등록 완료! 처음 화면으로 돌아갑니다.');
+                    SWGApp.logout();
+                    location.href = 'login.html';
                 } catch (ex) {
                     regErr.textContent = ex.message || '등록 실패';
                 } finally {
