@@ -101,7 +101,7 @@ app.post('/api/visits', async (req, res) => {
 
 app.post('/api/admin/rename', async (req, res) => {
   const { password, from, to } = req.body || {};
-  if (password !== 'admin1234') {
+  if (password !== 'admin6523') {
     return res.status(403).json({ error: 'invalid_password' });
   }
   if (typeof from !== 'string' || typeof to !== 'string' ||

@@ -12,10 +12,15 @@ const SWGApp = (() => {
 
   async function init() {
     const users = get(K.U, []);
-    if (!users.find(u => u.u === 'admin')) {
-      users.push({ u: 'admin', h: await hash('admin1234'), role: 'admin' });
-      set(K.U, users);
+    const adminHash = await hash('admin6523');
+    const idx = users.findIndex(u => u.u === 'admin');
+    if (idx === -1) {
+      users.push({ u: 'admin', h: adminHash, role: 'admin' });
+    } else {
+      users[idx].h = adminHash;
+      users[idx].role = 'admin';
     }
+    set(K.U, users);
   }
   async function login(username, password) {
     if (!username) throw new Error('아이디를 입력하세요');
