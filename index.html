@@ -18,7 +18,7 @@
     <meta name="x5-page-mode" content="app">
 
     <link rel="stylesheet" type="text/css" href="style-mobile.css" />
-    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=11" />
+    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=12" />
 </head>
 
 <body align="center">
@@ -30,6 +30,7 @@
             <span class="brand-name">홍성훈</span>
             <span class="brand-sub">조국혁신당 · 수박게임</span>
         </div>
+        <button id="suikaTopRegBtn" class="hb-reg" aria-label="점수 등록">📝</button>
         <div class="user-pill"><span id="suikaUser">-</span></div>
     </header>
 
@@ -406,6 +407,7 @@
             const closeReg = () => regModal.classList.remove('show');
 
             document.getElementById('btnRegScore').addEventListener('click', openReg);
+            document.getElementById('suikaTopRegBtn').addEventListener('click', openReg);
             document.getElementById('smRegScoreBtn').addEventListener('click', () => {
                 close();
                 openReg();
