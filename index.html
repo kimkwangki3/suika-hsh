@@ -18,7 +18,7 @@
     <meta name="x5-page-mode" content="app">
 
     <link rel="stylesheet" type="text/css" href="style-mobile.css" />
-    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=13" />
+    <link rel="stylesheet" type="text/css" href="ui-overlay.css?v=14" />
 </head>
 
 <body align="center">
@@ -363,12 +363,10 @@
                 }, 1500);
             })();
 
-            // 4) 점수 정지 휴리스틱 — scene tree에서 가장 큰 정수 라벨이
-            //    3초 이상 변화 없으면 게임 종료로 간주 (가장 견고한 백업)
-            (function pollScoreStalled() {
-                let lastBig = -1;
-                let lastChangeAt = Date.now();
-                let started = false;
+            // 4) 새 게임 시작 감지 — scene tree에서 점수가 큰 값에서 작은 값으로 떨어지면
+            //    게임 다시 시작으로 간주, 버튼 자동 숨김 (false positive 방지)
+            (function pollNewGame() {
+                let prevMax = 0;
                 function readMaxIntLabel() {
                     try {
                         if (typeof cc === 'undefined' || !cc.director) return null;
@@ -386,11 +384,6 @@
                                     if (n > best) best = n;
                                 }
                             }
-                            // 노드 자체가 라벨일 수 있음 (cocos2d-html5)
-                            if (typeof node.string === 'string' && /^\d{1,9}$/.test(node.string.trim())) {
-                                const n = parseInt(node.string.trim(), 10);
-                                if (n > best) best = n;
-                            }
                             const ch = node._children || node.children;
                             if (ch) for (const k of ch) walk(k, depth + 1);
                         }
@@ -401,20 +394,13 @@
                 setInterval(() => {
                     const v = readMaxIntLabel();
                     if (v == null) return;
-                    if (v > 0) started = true;
-                    if (v !== lastBig) {
-                        lastBig = v;
-                        lastChangeAt = Date.now();
-                    } else if (started && v > 0) {
-                        const elapsed = Date.now() - lastChangeAt;
-                        if (elapsed >= 3000) {
-                            // 3초 동안 점수 변화 없음 → 게임 정지/종료
-                            const stored = readCurrentGameScore();
-                            const final = stored > 0 ? stored : v;
-                            showRegBtn(final);
-                        }
+                    // 큰 점수 → 작은 점수로 급격히 변화 = 새 게임 시작
+                    if (prevMax >= 100 && v < 50) {
+                        hideRegBtn();
+                        window.__suikaLastScore = 0;
                     }
-                }, 700);
+                    prevMax = v;
+                }, 1000);
             })();
 
             // 디버그: 콘솔에서 __suikaDebug() 호출 시 현재 상태 확인
